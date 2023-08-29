@@ -34,5 +34,5 @@ jobs:
           context: .
           push: true
           tags: |
-            nginx-extras:latest
-            nginx-extras:${{ steps.get-version.outputs.version }}
+            aaronlee/nginx-extras:latest
+            aaronlee/nginx-extras:${{ steps.get-version.outputs.version }}
