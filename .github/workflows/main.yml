@@ -10,7 +10,6 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
 
     steps:
       - name: Checkout repository
@@ -34,29 +33,11 @@ jobs:
           VERSION=$(docker run --rm aaronlee/nginx-extras:latest cat /tmp/nginx_version.txt)
           echo "::set-output name=version::$VERSION"
 
-      - name: Get Docker Hub image details
-        id: get-image-details
-        run: |
-          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'${{ secrets.DOCKERHUB_USERNAME }}'", "password": "'${{ secrets.DOCKERHUB_TOKEN }}'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
-          IMAGE_DETAILS=$(curl -s -H "Authorization: JWT $TOKEN" -X GET https://hub.docker.com/v2/repositories/aaronlee/nginx-extras/)
-          LATEST_VERSION=$(echo $IMAGE_DETAILS | jq -r .results[0].tags[-1])
-
-          echo "::set-output name=dockerhub-version::$LATEST_VERSION"
-
-      - name: Check if image needs to be pushed
-        id: check-push
-        run: |
-          if [ "${{ steps.get-version.outputs.version }}" != "${{ steps.get-image-details.outputs.dockerhub-version }}" ]; then
-            echo "::set-output name=push::true"
-          else
-            echo "::set-output name=push::false"
-          fi
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
           context: .
-          push: ${{ steps.check-push.outputs.push }}
+          push: true
           tags: |
             aaronlee/nginx-extras:latest
             aaronlee/nginx-extras:${{ steps.get-version.outputs.version }}
