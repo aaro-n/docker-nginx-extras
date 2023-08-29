@@ -22,10 +22,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Build nginx-extras:latest image
+        run: docker build -t aaronlee/nginx-extras:latest .
+
       - name: Get nginx version
         id: get-version
         run: |
-          VERSION=$(docker run --rm nginx:latest nginx -v 2>&1 | awk -F '/' '{print $2}')
+          VERSION=$(docker run --rm aaronlee/nginx-extras:latest cat /tmp/nginx_version.txt)
           echo "::set-output name=version::$VERSION"
 
       - name: Build and push Docker image
