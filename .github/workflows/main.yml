@@ -25,7 +25,7 @@ jobs:
       - name: Get nginx version
         id: get-version
         run: |
-          VERSION=$(docker run --rm nginx:latest nginx -v 2>&1 | cut -d' ' -f3)
+          VERSION=$(docker run --rm nginx:latest nginx -v 2>&1 | awk -F '/' '{print $2}')
           echo "::set-output name=version::$VERSION"
 
       - name: Build and push Docker image
