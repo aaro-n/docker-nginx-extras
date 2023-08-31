@@ -5,7 +5,8 @@ on:
     branches:
       - main
   schedule:
-    - cron: "33 3 26 * *"
+  #  - cron: "33 3 26 * *"
+       - cron: "33 14 * * *"
 
 
 jobs:
@@ -46,6 +47,6 @@ jobs:
           platforms: linux/arm64,linux/arm/v7,linux/amd64
           push: true
           tags: |
-            aaronlee/nginx-extras:latest
-            aaronlee/nginx-extras:${{ steps.get-version.outputs.version }}
-            aaronlee/nginx-extras:${{ steps.get-version.outputs.version }}-${{ steps.set-timestamp.outputs.timestamp }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}-${{ steps.set-timestamp.outputs.timestamp }}
