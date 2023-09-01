@@ -4,10 +4,15 @@ on:
   push:
     branches:
       - main
+  schedule:
+      - cron: "33 3 26 * *"
+     
+
 
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Checkout repository
@@ -22,40 +27,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Get Nginx version from Docker image
+      - name: Build nginx-extras:latest image
+        run: docker build -t aaronlee/nginx-extras:latest .
+
+      - name: Get nginx version
         id: get-version
         run: |
           VERSION=$(docker run --rm aaronlee/nginx-extras:latest cat /tmp/nginx_version.txt)
           echo "::set-output name=version::$VERSION"
 
-      - name: Get Nginx version from version file
-        id: get-version-file
-        run: |
-          VERSION_FILE=$(cat version)
-          echo "::set-output name=version-file::$VERSION_FILE"
-
-      - name: Check if versions match
-        id: check-versions
-        run: |
-          if [ "${{ steps.get-version.outputs.version }}" == "${{ steps.get-version-file.outputs.version-file }}" ]; then
-            echo "Versions match. No need to push to Docker Hub."
-            exit 0
-          else
-            echo "Versions do not match. Proceeding with Docker image build and push."
-            exit 1
-          fi
-
-      - name: Build nginx-extras:latest image
-        if: steps.check-versions.outcome == 'failure'
-        run: docker build -t aaronlee/nginx-extras:latest .
-
       - name: Set build timestamp
-        if: steps.check-versions.outcome == 'failure'
         id: set-timestamp
         run: echo "::set-output name=timestamp::$(date +'%Y%m%d%H%M%S')"
 
       - name: Build and push Docker image
-        if: steps.check-versions.outcome == 'failure'
         uses: docker/build-push-action@v2
         with:
           context: .
