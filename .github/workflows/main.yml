@@ -63,4 +63,5 @@ jobs:
 
       - name: Update version file
         if: steps.check-version.outputs.skip != 'true'
-        run: echo "${{ steps.get-version.outputs.version }}" > version
+        run: |
+          echo "${{ steps.get-version.outputs.version }}" > ${{ github.workspace }}/version
