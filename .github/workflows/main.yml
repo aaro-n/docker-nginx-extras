@@ -26,7 +26,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build nginx-extras:latest image
-        run: docker build -t aaronlee/nginx-extras:latest .
+        run: docker build --platform linux/386 -t aaronlee/nginx-extras:latest .
 
       - name: Get nginx version
         id: get-version
