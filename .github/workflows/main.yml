@@ -71,3 +71,12 @@ jobs:
         with:
           name: version
           path: version
+
+      - name: Update version file in repository
+        if: steps.check-version.outputs.skip != 'true'
+        run: |
+          git config --global user.name "Your Name"
+          git config --global user.email "your.email@example.com"
+          git add version
+          git commit -m "Update version file"
+          git push
