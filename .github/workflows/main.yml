@@ -31,17 +31,16 @@ jobs:
       - name: Get nginx version
         id: get-version
         run: |
-          VERSION=$(docker run --rm aaronlee/nginx-extras:latest cat /tmp/nginx_version.txt)
-          echo $VERSION >> $GITHUB_ENV
+          echo "::set-output name=version::$(docker run --rm aaronlee/nginx-extras:latest cat /tmp/nginx_version.txt)"
 
       - name: Check version and skip if same
         id: check-version
         run: |
-          if [ "${{ steps.get-version.outputs.VERSION }}" = "$(cat version)" ]; then
-            echo "Version ${{ steps.get-version.outputs.VERSION }} already exists, skipping build and push."
+          if [ "${{ steps.get-version.outputs.version }}" = "$(cat version)" ]; then
+            echo "Version ${{ steps.get-version.outputs.version }} already exists, skipping build and push."
             echo "::set-output name=skip::true"
           else
-            echo "Version ${{ steps.get-version.outputs.VERSION }} is different, continuing with build and push."
+            echo "Version ${{ steps.get-version.outputs.version }} is different, continuing with build and push."
             echo "::set-output name=skip::false"
           fi
 
@@ -58,13 +57,13 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.VERSION }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.VERSION }}-${{ steps.set-timestamp.outputs.timestamp }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}-${{ steps.set-timestamp.outputs.timestamp }}
 
       - name: Update version file
         if: steps.check-version.outputs.skip != 'true'
         run: |
-          echo "${{ steps.get-version.outputs.VERSION }}" > version
+          echo "${{ steps.get-version.outputs.version }}" > version
 
       - name: Upload version file
         if: steps.check-version.outputs.skip != 'true'
