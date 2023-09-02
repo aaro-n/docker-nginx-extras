@@ -34,16 +34,16 @@ jobs:
           VERSION=$(docker run --rm aaronlee/nginx-extras:latest cat /tmp/nginx_version.txt)
           echo "::set-output name=version::$VERSION"
 
-- name: Check version and skip if same
-  id: check-version
-  run: |
-    if [ "${{ steps.get-version.outputs.version }}" = "$(cat version)" ]; then
-      echo "Version ${{ steps.get-version.outputs.version }} already exists, skipping build and push."
-      echo "::set-output name=skip::true"
-    else
-      echo "Version ${{ steps.get-version.outputs.version }} is different, continuing with build and push."
-      echo "::set-output name=skip::false"
-    fi
+      - name: Check version and skip if same
+        id: check-version
+        run: |
+          if [ "${{ steps.get-version.outputs.version }}" = "$(cat version)" ]; then
+            echo "Version ${{ steps.get-version.outputs.version }} already exists, skipping build and push."
+            echo "::set-output name=skip::true"
+          else
+            echo "Version ${{ steps.get-version.outputs.version }} is different, continuing with build and push."
+            echo "::set-output name=skip::false"
+          fi
 
       - name: Set build timestamp
         id: set-timestamp
