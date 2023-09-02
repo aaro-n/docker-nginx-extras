@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  nginx-extras:
+    image: aaronlee/nginx-extras:latest
+    restart: always
+    container_name: nginx
+    # 网络模式选择，使用host模式就无法使用下方端口设置了。
+    network_mode: host
+    volumes:
+      # 修改nginx引入的配置文件
+      - ./system/http.conf:/home/nginx/system/http.conf:ro
+#      - ./sites:/home/nginx/sites
+#      - ./config:/home/nginx/config
+#      - ./ssl:/home/nginx/ssl
+#      - /tmp/nginx-cache:/tmp/nginx
+#      - /tmp/nginx-logs:/tmp/nginx-logs
+#      使用端口模式请将'network_mode: host'注释掉，两者相冲突
+        #    ports:
+        #      - 80:80
+        #      - 443:443

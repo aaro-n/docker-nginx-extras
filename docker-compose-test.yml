@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  nginx-extras:
+    image: aaronlee/nginx-extras:latest
+    volumes:
+      - ./system/http.conf:/home/nginx/system/http.conf:ro
+      - ./sites:/home/nginx/sites
+      - ./config:/home/nginx/config
+      - ./ssl:/home/nginx/ssl
+      - /tmp/nginx-cache:/tmp/nginx
+      - /tmp/nginx-logs:/tmp/nginx-logs
+        #    ports:
+        #      - 80:80
+        #      - 443:443
