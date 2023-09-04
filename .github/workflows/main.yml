@@ -48,6 +48,13 @@ jobs:
         id: set-timestamp
         run: echo "::set-output name=timestamp::$(date +'%Y%m%d%H%M%S')"
 
+      - name: Extract version prefix
+        id: extract_version_prefix
+        run: |
+          version=${{ steps.get-version.outputs.version }}
+          version_prefix=${version:0:4}
+          echo "::set-output name=version_prefix::$version_prefix"
+
       - name: Build and push Docker image
         if: steps.check-version.outputs.skip != 'true'
         uses: docker/build-push-action@v2
@@ -58,6 +65,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.extract_version_prefix.outputs.version_prefix }}
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}-${{ steps.set-timestamp.outputs.timestamp }}
 
       - name: Update version file
