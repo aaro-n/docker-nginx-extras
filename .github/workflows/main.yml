@@ -90,11 +90,9 @@ jobs:
           git push
 
       - name: 写入时间到文件
-        if: steps.check-version.outputs.skip != 'true'
         run: echo $(date +"%Y-%m-%d %H:%M:%S") > time
 
       - name: 提交和推送时间更改
-        if: steps.check-version.outputs.skip != 'true'
         run: |
           git add time
           git commit -m "更新时间文件"
