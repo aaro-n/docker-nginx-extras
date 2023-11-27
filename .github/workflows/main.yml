@@ -80,11 +80,16 @@ jobs:
           name: version
           path: version
 
-      - name: Update version file in repository
+      - name: Write timestamp to file
         if: steps.check-version.outputs.skip != 'true'
         run: |
-          git config --global user.name "GitHub Actions "
+          echo $(date +'%Y-%m-%d %H:%M:%S') > time
+
+      - name: Commit and push changes
+        if: steps.check-version.outputs.skip != 'true'
+        run: |
+          git config --global user.name "GitHub Actions"
           git config --global user.email "email@example.com"
-          git add version
-          git commit -m "Update version file"
+          git add version time
+          git commit -m "Update version and time files"
           git push
