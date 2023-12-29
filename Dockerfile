@@ -13,8 +13,8 @@ RUN sed -i '/include \/etc\/nginx\/modules-enabled\/\*\.conf;/a\    include \/ho
     && sed -i '/events {/a\    # multi_accept on;\n    include \/home\/nginx\/system\/events.conf;' /etc/nginx/nginx.conf \
     && sed -i '/include \/etc\/nginx\/sites-enabled\/\*;/a\    include \/home\/nginx\/system\/http.conf;' /etc/nginx/nginx.conf 
 
-RUN nginx -v 2>&1 | awk -F '/' '{print $\$2}' > /tmp/nginx_version.txt
+RUN nginx -v 2>&1 | awk -F '/' '{print $2}' > /tmp/nginx_version.txt
+# 添加其他配置或操作
 
-# 修改CMD指令以启动Nginx并显示错误日志和访问日志
-CMD ["nginx", "-g", "daemon off;", "-c", "/etc/nginx/nginx.conf", "-t", "&", "&", "nginx", "-g", "error_log /var/log/nginx/error.log;", "&", "&", "nginx", "-g", "access_log /var/log/nginx/access.log;"]
+CMD ["nginx", "-g", "daemon off;"]
 
