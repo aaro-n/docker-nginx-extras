@@ -1,4 +1,5 @@
 #!/bin/sh
 
-# 启动Nginx
-exec nginx -g "daemon off;"
+# 启动Nginx，同时加载访问日志配置
+exec nginx -g "daemon off;" -c /etc/nginx/nginx.conf
+
