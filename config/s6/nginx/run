@@ -1,20 +1,13 @@
 #!/bin/sh
 
-# 等待5秒
-sleep 3
+# Other commands
 
-# 从环境变量中读取值
-NGINX_ROOT_HTML="$NGINX_ROOT_HTML"
-NGINX_PORT="$NGINX_PORT"
-PHP_VERSION="$PHP_VERSION"
+# Add the following lines to configure Nginx access log
+mkdir -p /var/log/nginx
+touch /var/log/nginx/access.log
+chmod 0644 /var/log/nginx/access.log
+ln -sf /dev/stdout /var/log/nginx/access.log
 
-# 替换配置文件中的占位符
-sed -i "s#NGINX_PORT#$NGINX_PORT#g" /etc/nginx/sites-enabled/default
-sed -i "s#NGINX_ROOT_HTML#$NGINX_ROOT_HTML#g" /etc/nginx/sites-enabled/default
-sed -i "s#phpPHP_VERSION-fpm.sock#php${PHP_VERSION}-fpm.sock#g" /etc/nginx/sites-enabled/default
-
-# 标记脚本已经运行过，避免重复执行
-touch /var/run/chown_script_executed
-
-# 启动Nginx
+# Start Nginx
 exec nginx -g "daemon off;"
+
