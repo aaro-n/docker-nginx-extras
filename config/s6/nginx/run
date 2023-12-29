@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# 启动Nginx
+exec nginx -g "daemon off;"
