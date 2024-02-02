@@ -25,13 +25,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 构建 nginx-extras:latest 镜像
-        run: docker build --platform linux/386 -t aaronlee/nginx-extras:latest .
-
       - name: 获取 nginx 版本
         id: get-version
         run: |
-          echo "::set-output name=version::$(docker run --rm aaronlee/nginx-extras:latest cat /tmp/nginx_version.txt)"
+          echo "::set-output name=version::$(docker run --rm "${{ secrets.DOCKER_USERNAME_TEST }}/${{ secrets.DOCKER_IMAGE_TEST }}:${{ secrets.DOCKER_TAG_TEST }}" cat /tmp/nginx_version.txt)"
 
       - name: 检查版本并跳过构建和推送
         id: check-version
