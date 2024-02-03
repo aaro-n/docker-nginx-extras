@@ -2,7 +2,7 @@ FROM debian:latest
 
 ENV NGINX_LOG=/var/log/nginx/access.log
 
-RUN apt-get update && apt-get install -y nginx-extras s6 \
+RUN apt-get update && apt-get install -y --no-install-recommends nginx-extras s6 \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apk/* 
 
