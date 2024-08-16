@@ -21,14 +21,19 @@ jobs:
         run: |
           echo "::set-output name=version::$(docker run --rm "${{ secrets.DOCKER_USERNAME_TEST }}/${{ secrets.DOCKER_IMAGE_TEST }}:${{ secrets.DOCKER_TAG_TEST }}" cat /tmp/nginx_version.txt)"
 
+      - name: 获取 nginx 版本
+        id: get-version-all
+        run: |
+          echo "::set-output name=version::$(docker run --rm "${{ secrets.DOCKER_USERNAME_TEST }}/${{ secrets.DOCKER_IMAGE_TEST }}:${{ secrets.DOCKER_TAG_TEST }}" cat /tmp/nginx_extras_version.txt)"
+
       - name: 检查版本并跳过构建和推送
         id: check-version
         run: |
-          if [ "${{ steps.get-version.outputs.version }}" = "$(cat version)" ]; then
-            echo "版本 ${{ steps.get-version.outputs.version }} 已存在，跳过构建和推送。"
+          if [ "${{ steps.get-version-all.outputs.version }}" = "$(cat version)" ]; then
+            echo "版本 ${{ steps.get-version-all.outputs.version }} 已存在，跳过构建和推送。"
             echo "::set-output name=skip::true"
           else
-            echo "版本 ${{ steps.get-version.outputs.version }} 不同，继续进行构建和推送。"
+            echo "版本 ${{ steps.get-version-all.outputs.version }} 不同，继续进行构建和推送。"
             echo "::set-output name=skip::false"
           fi
 
@@ -68,11 +73,13 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.extract_version_prefix.outputs.version_prefix }}
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}-${{ steps.set-timestamp.outputs.timestamp }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version-all.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version-all.outputs.version }}-${{ steps.set-timestamp.outputs.timestamp }}
 
       - name: 更新版本文件
         if: steps.check-version.outputs.skip != 'true'
         run: |
-          echo "${{ steps.get-version.outputs.version }}" > version
+          echo "${{ steps.get-version-all.outputs.version }}" > version
 
       - name: 上传版本文件
         if: steps.check-version.outputs.skip != 'true'
