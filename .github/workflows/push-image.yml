@@ -21,10 +21,15 @@ jobs:
         run: |
           echo "::set-output name=version::$(docker run --rm "${{ secrets.DOCKER_USERNAME_TEST }}/${{ secrets.DOCKER_IMAGE_TEST }}:${{ secrets.DOCKER_TAG_TEST }}" cat /tmp/nginx_version.txt)"
 
-      - name: 获取 nginx 版本
+      - name: 获取 nginx 附加版本
         id: get-version-all
         run: |
           echo "::set-output name=version::$(docker run --rm "${{ secrets.DOCKER_USERNAME_TEST }}/${{ secrets.DOCKER_IMAGE_TEST }}:${{ secrets.DOCKER_TAG_TEST }}" cat /tmp/nginx_extras_version.txt)"
+
+      - name: 调试版本
+        run: |
+          echo "Nginx 版本: ${{ steps.get-version.outputs.version }}"
+          echo "Nginx 附加版本: ${{ steps.get-version-all.outputs.version }}"
 
       - name: 检查版本并跳过构建和推送
         id: check-version
