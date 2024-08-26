@@ -22,7 +22,7 @@ jobs:
       - name: 获取 nginx 版本
         id: get-version
         run: |
-          echo "::set-output name=version::$(docker run --rm nginx-extras-text cat /tmp/nginx_version.txt)"
+          echo "::set-output name=version::$(docker run --rm nginx-extras-test cat /tmp/nginx_version.txt)"
 
       - name: 获取 nginx 附加版本
         id: get-version-all
