@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# 从环境变量读取文件路径
+SHOW_NGINX_LOG=${SHOW_NGINX_LOG}
+
+# 定义状态文件
+STATE_FILE="/tmp/nginx_log_created" # 请将此路径替换为适合你的环境的路径
+
+# 检查状态文件是否存在
+if [ -e "$STATE_FILE" ]; then
+    exit 0
+fi
+
+# 检查日志文件是否存在
+if [ -e "$SHOW_NGINX_LOG" ]; then
+    echo "文件 $SHOW_NGINX_LOG 已存在，未创建。"
+else
+    # 确保日志目录存在
+    mkdir -p "$(dirname "$SHOW_NGINX_LOG")"
+    
+    # 如果文件不存在，创建文件
+    touch "$SHOW_NGINX_LOG"
+    echo "文件 $SHOW_NGINX_LOG 已创建。"
+fi
+
+# 修改文件权限
+chmod 0644 "$SHOW_NGINX_LOG"
+echo "文件 $SHOW_NGINX_LOG 权限已设置为 0644。"
+
+# 创建状态文件，标记脚本已执行
+touch "$STATE_FILE"
+echo "状态文件 $STATE_FILE 已创建，标记脚本已执行。"
+
+# 退出 `oneshot` 服务
+exit 0

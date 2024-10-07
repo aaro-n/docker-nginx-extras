@@ -1,13 +1,13 @@
 #!/bin/sh
 
 # Other commands
+sleep 2
 
 # Add the following lines to configure Nginx access log
 mkdir -p /var/log/nginx
 touch /var/log/nginx/access.log
 chmod 0644 /var/log/nginx/access.log
-ln -sf /dev/stdout /var/log/nginx/access.log
+ln -sf /dev/stdout "$SHOW_NGINX_LOG"
 
 # Start Nginx
 exec nginx -g "daemon off;"
-
