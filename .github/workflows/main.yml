@@ -91,7 +91,7 @@ jobs:
 
       - name: 上传版本文件
         if: steps.check-version.outputs.skip != 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: version
           path: version
