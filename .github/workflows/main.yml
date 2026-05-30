@@ -19,31 +19,50 @@ jobs:
       - name: 构建用于提取Nginx版本的镜像
         run: docker build -t nginx-extras-test -f Dockerfile-test .
 
-      - name: 获取 nginx 版本
-        id: get-version
+      - name: 获取 nginx 原始完整版本
+        id: get-raw-version
         run: |
-          echo "::set-output name=version::$(docker run --rm nginx-extras-test cat /tmp/nginx_version.txt)"
-
-      - name: 获取 nginx 附加版本
-        id: get-version-all
-        run: |
-          echo "::set-output name=version::$(docker run --rm nginx-extras-test cat /tmp/nginx_extras_version.txt)"
-
-      - name: 调试版本
-        run: |
-          echo "Nginx 版本: ${{ steps.get-version.outputs.version }}"
-          echo "Nginx 附加版本: ${{ steps.get-version-all.outputs.version }}"
+          RAW_FULL=$(docker run --rm nginx-extras-test cat /tmp/nginx_extras_version.txt)
+          echo "raw_full=$RAW_FULL" >> $GITHUB_OUTPUT
 
       - name: 检查版本并跳过构建和推送
         id: check-version
         run: |
-          if [ "${{ steps.get-version-all.outputs.version }}" = "$(cat version)" ]; then
-            echo "版本 ${{ steps.get-version-all.outputs.version }} 已存在，跳过构建和推送。"
-            echo "::set-output name=skip::true"
+          # 使用完整的带 + 号的版本与仓库中的 version 文件进行精准对比
+          if [ "${{ steps.get-raw-version.outputs.raw_full }}" = "$(cat version 2>/dev/null)" ]; then
+            echo "版本 ${{ steps.get-raw-version.outputs.raw_full }} 已存在，跳过构建和推送。"
+            echo "skip=true" >> $GITHUB_OUTPUT
           else
-            echo "版本 ${{ steps.get-version-all.outputs.version }} 不同，继续进行构建和推送。"
-            echo "::set-output name=skip::false"
+            echo "版本 ${{ steps.get-raw-version.outputs.raw_full }} 不同，继续进行构建和推送。"
+            echo "skip=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: 解析多级 Docker 标签
+        if: steps.check-version.outputs.skip != 'true'
+        id: parse-tags
+        run: |
+          RAW_FULL="${{ steps.get-raw-version.outputs.raw_full }}"
+          
+          # 1. 转换为 Docker 安全的标签 (把 + 换成 _) -> 对应 1.26.3-3_deb13u5
+          TAG_FULL=$(echo "$RAW_FULL" | tr '+' '_')
+          echo "tag_full=$TAG_FULL" >> $GITHUB_OUTPUT
+          
+          # 2. 提取 1.26.3-3
+          TAG_DEB=$(echo "$RAW_FULL" | cut -d '+' -f 1)
+          echo "tag_deb=$TAG_DEB" >> $GITHUB_OUTPUT
+          
+          # 3. 提取 1.26.3
+          TAG_MAIN=$(echo "$TAG_DEB" | cut -d '-' -f 1)
+          echo "tag_main=$TAG_MAIN" >> $GITHUB_OUTPUT
+          
+          # 4. 提取 1.26
+          TAG_MINOR=$(echo "$TAG_MAIN" | cut -d '.' -f 1-2)
+          echo "tag_minor=$TAG_MINOR" >> $GITHUB_OUTPUT
+
+      - name: 设置构建时间戳
+        if: steps.check-version.outputs.skip != 'true'
+        id: set-timestamp
+        run: echo "timestamp=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
 
       - name: 设置 Docker Buildx
         if: steps.check-version.outputs.skip != 'true'
@@ -56,19 +75,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 设置构建时间戳
-        if: steps.check-version.outputs.skip != 'true'
-        id: set-timestamp
-        run: echo "::set-output name=timestamp::$(date +'%Y%m%d%H%M%S')"
-
-      - name: 提取版本前缀
-        if: steps.check-version.outputs.skip != 'true'
-        id: extract_version_prefix
-        run: |
-          version=${{ steps.get-version.outputs.version }}
-          version_prefix=${version:0:4}
-          echo "::set-output name=version_prefix::$version_prefix"
-
       - name: 构建并推送 Docker 镜像
         if: steps.check-version.outputs.skip != 'true'
         uses: docker/build-push-action@v2
@@ -78,16 +84,19 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.extract_version_prefix.outputs.version_prefix }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version.outputs.version }}-${{ steps.set-timestamp.outputs.timestamp }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version-all.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.get-version-all.outputs.version }}-${{ steps.set-timestamp.outputs.timestamp }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_full }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_deb }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_deb }}-${{ steps.set-timestamp.outputs.timestamp }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_main }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_main }}-${{ steps.set-timestamp.outputs.timestamp }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_minor }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_minor }}-${{ steps.set-timestamp.outputs.timestamp }}
 
       - name: 更新版本文件
         if: steps.check-version.outputs.skip != 'true'
         run: |
-          echo "${{ steps.get-version-all.outputs.version }}" > version
+          # 将包含 + 号的完整原始版本写入 version 文件，用于下次比对
+          echo "${{ steps.get-raw-version.outputs.raw_full }}" > version
 
       - name: 上传版本文件
         if: steps.check-version.outputs.skip != 'true'
