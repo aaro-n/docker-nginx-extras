@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: 检出仓库
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4  # 升级至 v4，支持 Node 24
 
       - name: 构建用于提取Nginx版本的镜像
         run: docker build -t nginx-extras-test -f Dockerfile-test .
@@ -66,18 +66,16 @@ jobs:
 
       - name: 设置 Docker Buildx
         if: steps.check-version.outputs.skip != 'true'
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3  # 升级至 v3，移除内部遗留的老语法并全面支持 Node 24
 
       - name: 登录到 Docker Hub
         if: steps.check-version.outputs.skip != 'true'
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        uses: docker/login-action@v3  # 升级至 v3
 
       - name: 构建并推送 Docker 镜像
         if: steps.check-version.outputs.skip != 'true'
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5  # 升级至 v5
+
         with:
           context: .
           platforms: linux/arm64,linux/arm/v7,linux/amd64
@@ -87,8 +85,8 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_full }}
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_deb }}
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_deb }}-${{ steps.set-timestamp.outputs.timestamp }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_main }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_main }}-${{ steps.set-timestamp.outputs.timestamp }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ secrets.parse-tags.outputs.tag_main }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_main }}-${{ secrets.set-timestamp.outputs.timestamp }}
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_minor }}
             ${{ secrets.DOCKERHUB_USERNAME }}/nginx-extras:${{ steps.parse-tags.outputs.tag_minor }}-${{ steps.set-timestamp.outputs.timestamp }}
 
@@ -100,7 +98,8 @@ jobs:
 
       - name: 上传版本文件
         if: steps.check-version.outputs.skip != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4  # 保持最新的 v4
+
         with:
           name: version
           path: version
